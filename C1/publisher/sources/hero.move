@@ -20,6 +20,7 @@ module publisher::hero {
     public fun create_hero(publisher: &Publisher, name: String, ctx: &mut TxContext): Hero {
         // verify that publisher is from the same module
         assert!(publisher.from_module<HERO>(), EWrongPublisher);
+        assert!(publisher.from_package<HERO>(), EWrongPublisher);
 
         // create Hero resource
          Hero {
@@ -107,19 +108,18 @@ module publisher::hero {
         ts.end();
     }
 
-    // #[test]
-    // #[expected_failure(abort_code = EWrongPublisher)]
+    // #[test, expected_failure(abort_code = EWrongPublisher)]
     // fun test_publisher_is_from_another_module() {
     //     let mut ts = ts::begin(ADMIN);
     //     let mut ts2 = ts::begin(USER);
 
-    //     init(HERO{}, ts.ctx());
-    //     ts.next_tx(ADMIN);
-
     //     init(HERO{}, ts2.ctx());
     //     ts2.next_tx(USER);
 
-    //     let publisher2 = ts2.take_from_sender<Publisher>();
+    //     init(HERO{}, ts.ctx());
+    //     ts.next_tx(ADMIN);
+
+    //     let publisher2 = ts2.take_from_address<Publisher>(USER);
 
     //     let hero = create_hero(&publisher2, b"Hero".to_string(), ts2.ctx());
 
@@ -146,6 +146,7 @@ module publisher::hero_test {
         package::claim_and_keep(otw, ctx);
     }
 
+    // Much cooler failure syntax
     #[test, expected_failure(abort_code = hero::EWrongPublisher)]
     fun test_publisher_cannot_mint_hero_with_wrong_publisher_object() {
         let mut ts = ts::begin(ADMIN);
@@ -160,6 +161,7 @@ module publisher::hero_test {
 
         let _hero = hero::create_hero(&publisher, b"Hero 1".to_string(), ts.ctx());
 
+        // We're using this for understand if the unhappy path didn't worked
         abort (1337)
     }
 }
