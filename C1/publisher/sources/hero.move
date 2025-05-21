@@ -1,6 +1,6 @@
 module publisher::hero {
     use std::string::String;
-    use sui::package::{Self, Publisher};
+    use sui::package::{Publisher};
 
     const EWrongPublisher: u64 = 1;
 
@@ -9,26 +9,38 @@ module publisher::hero {
         name: String,
     }
 
-    fun init(ctx: &mut TxContext) {
+    // OTW
+    public struct HERO has drop {}
+
+    fun init(otw: HERO, ctx: &mut TxContext) {
         // create Publisher and transfer it to the publisher wallet
+        claim_and_keep(otw, ctx);
     }
 
     public fun create_hero(publisher: &Publisher, name: String, ctx: &mut TxContext): Hero {
         // verify that publisher is from the same module
+        assert!(publisher.from_module<HERO>(), EWrongPublisher);
 
         // create Hero resource
+         Hero {
+            id: object::new(ctx),
+            name,
+        } 
     }
 
     public fun transfer_hero(publisher: &Publisher, hero: Hero, to: address) {
         // verify that publisher is from the same module
+        assert!(publisher.from_module<HERO>(), EWrongPublisher);
 
         // transfer the Hero resource to the user
+        transfer::transfer(hero, to);
     }
 
     // ===== TEST ONLY =====
 
     #[test_only]
     use sui::{test_scenario as ts, test_utils::{assert_eq, destroy}};
+    use sui::package::claim_and_keep;
 
     #[test_only]
     const ADMIN: address = @0xAA;
@@ -50,7 +62,7 @@ module publisher::hero {
         ts.return_to_sender(publisher);
 
         ts.end();
-    }
+    } 
 
     #[test]
     fun test_admin_can_create_hero() {
@@ -76,7 +88,47 @@ module publisher::hero {
     #[test]
     fun test_admin_can_transfer_hero() {
         // TODO: Implement test
+        let mut ts = ts::begin(ADMIN);
+
+        init(HERO {}, ts.ctx());
+
+        ts.next_tx(ADMIN);
+
+        let publisher = ts.take_from_sender<Publisher>();
+
+        let hero = create_hero(&publisher, b"Hero 1".to_string(), ts.ctx());
+
+        assert_eq(hero.name, b"Hero 1".to_string());
+
+        transfer_hero(&publisher, hero, USER);
+
+        ts.return_to_sender(publisher);
+
+        ts.end();
     }
+
+    // #[test]
+    // #[expected_failure(abort_code = EWrongPublisher)]
+    // fun test_publisher_is_from_another_module() {
+    //     let mut ts = ts::begin(ADMIN);
+    //     let mut ts2 = ts::begin(USER);
+
+    //     init(HERO{}, ts.ctx());
+    //     ts.next_tx(ADMIN);
+
+    //     init(HERO{}, ts2.ctx());
+    //     ts2.next_tx(USER);
+
+    //     let publisher2 = ts2.take_from_sender<Publisher>();
+
+    //     let hero = create_hero(&publisher2, b"Hero".to_string(), ts2.ctx());
+
+    //     destroy(hero);
+
+    //     ts2.return_to_sender(publisher2);
+    //     ts.end();
+    //     ts2.end();
+    // }
 }
 
 #[test_only]
