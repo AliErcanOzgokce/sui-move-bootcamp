@@ -16,7 +16,6 @@ describe("Transfer SUI amount", () => {
       senderSecretKey: ENV.USER_SECRET_KEY,
       recipientAddress: ENV.RECIPIENT_ADDRESS,
     });
-    console.log("Executed transaction with txDigest:", txResponse.digest);
   });
 
   test("Transaction Status", () => {

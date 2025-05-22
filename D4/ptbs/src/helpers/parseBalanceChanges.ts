@@ -20,9 +20,20 @@ export const parseBalanceChanges = ({
   senderAddress,
   recipientAddress,
 }: Args): Response => {
-  // TODO: Implement the function
+  const rec = balanceChanges.find(
+    (balance) => {
+      const owner = balance.owner as {AddressOwner:string}; 
+      return owner.AddressOwner === recipientAddress;
+    }
+  );
+  const sender = balanceChanges.find(
+    (balance) => {
+      const owner = balance.owner as {AddressOwner:string}; 
+      return owner.AddressOwner === senderAddress;
+    }
+  );
   return {
-    recipientSUIBalanceChange: 0,
-    senderSUIBalanceChange: 0,
-  }
+    recipientSUIBalanceChange: Number(rec?.amount),
+    senderSUIBalanceChange: Number(sender?.amount),
+  };
 };

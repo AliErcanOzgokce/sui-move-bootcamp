@@ -22,6 +22,11 @@ export const transferSUI = async ({
   
   // TODO: Add the commands to the transaction
 
+  const [coin] = tx.splitCoins(tx.gas, [amount]);
+
+  tx.transferObjects([coin], recipientAddress);
+
+  
   return suiClient.signAndExecuteTransaction({
     transaction: tx,
     signer: getSigner({ secretKey: senderSecretKey }),
